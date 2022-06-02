@@ -21,8 +21,11 @@ try:
     data = pandas.read_csv("words/words_to_learn.csv")
 except FileNotFoundError:
     data = pandas.read_csv("words/NL-ENG.csv")
+    data[LANGUAGE_TO_LEARN] = data[LANGUAGE_TO_LEARN].str.replace('\d+', '')
+    data[LANGUAGE_NATIVE] = data[LANGUAGE_NATIVE].str.replace('\d+', '')
 finally:
     frequency_dictionary = data.to_dict(orient="records")
+
 
 
 # button mechanism
