@@ -2,7 +2,8 @@ import tkinter
 import pandas
 import random
 
-# const variables
+
+# variables
 BACKGROUND_COLOR = "#B1DDC6"
 LANGUAGE_TO_LEARN = "DUTCH"
 LANGUAGE_NATIVE = "ENGLISH"
@@ -16,18 +17,19 @@ ind = 0
 
 
 # reading data
-data = pandas.read_csv("words/NL-ENG.csv")
-frequency_dictionary = data.to_dict(orient="records")
-LENGTH = len(frequency_dictionary)
-
-
+try:
+    data = pandas.read_csv("words/words_to_learn.csv")
+except FileNotFoundError:
+    data = pandas.read_csv("words/NL-ENG.csv")
+finally:
+    frequency_dictionary = data.to_dict(orient="records")
 
 
 # button mechanism
 def choose_random_word():
     global ind, flip_timer
     window.after_cancel(flip_timer)
-    index = random.randint(0, LENGTH)
+    index = random.randint(0, len(frequency_dictionary)-1)
     card.itemconfig(card_background, image=front_card)
     card.itemconfig(text_top, fill="black", text=LANGUAGE_TO_LEARN)
     card.itemconfig(text_bottom, fill="black", text=frequency_dictionary[index][LANGUAGE_TO_LEARN])
@@ -35,12 +37,19 @@ def choose_random_word():
     flip_timer = window.after(ms=TIMER, func=flip)
 
 
+# creating list of only words that are not known
+def update_list():
+    frequency_dictionary.pop(ind)
+    new_data = pandas.DataFrame(frequency_dictionary)
+    new_data.to_csv("words/words_to_learn.csv", index=False)
+    choose_random_word()
+
+
 # generating translation card. stopping the timer after the flip
 def flip():
     card.itemconfig(card_background, image=back_card)
     card.itemconfig(text_top, fill="white", text=LANGUAGE_NATIVE)
     card.itemconfig(text_bottom, fill="white", text=frequency_dictionary[ind][LANGUAGE_NATIVE])
-
 
 
 # APP LAYOUT - creating visual user interface
@@ -62,19 +71,15 @@ card_background = card.create_image(0, 0, anchor="nw", image=front_card)
 text_top = card.create_text(X_TXT_COORDINATES, Y_TXT_COORDINATES_TOP, text=LANGUAGE_TO_LEARN, font=FONT_TOP)
 text_bottom = card.create_text(X_TXT_COORDINATES, Y_TXT_COORDINATES_BOTTOM, text="are you ready?", font=FONT_BOTTOM)
 card.grid(row=0, column=0, columnspan=2)
-
-
 # buttons
 wrong_button = tkinter.Button(image=wrong_image, highlightthickness=0, command=choose_random_word)
-right_button = tkinter.Button(image=right_image, highlightthickness=0, command=choose_random_word)
+right_button = tkinter.Button(image=right_image, highlightthickness=0, command=update_list)
 wrong_button.grid(column=0, row=1)
 right_button.grid(column=1, row=1)
 
 
 # loading first flash card at the beginning of the program
 choose_random_word()
-
-
 
 # END
 window.mainloop()
